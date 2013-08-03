@@ -20,6 +20,9 @@ corpora/norwegian.conll: corpora/norwegian-full.conll
 corpora/norwegian-test.conll: corpora/norwegian-full.conll
 	tail -n +97471 $< > $@
 
+%-preproc.conll: parsed/%-danish.conll parsed/%-norwegian.conll parsed/%-swedish.conll parsed/%-caterpillar.conll
+	./scripts/merge-corpora.pl $^ > $@
+
 # Training and parsing:
 models/%.mco: corpora/%.conll | models
 	cd models && $(MALT) -m learn -c $* -l liblinear -a nivreeager -i ../$<

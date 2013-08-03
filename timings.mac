@@ -1,0 +1,76 @@
+package Conll2009;
+#binding-context Conll2009
+
+use strict;
+use warnings;
+use feature qw/say/;
+
+use File::Basename qw/fileparse/;
+use Storable qw/nstore retrieve/;
+BEGIN { TredMacro->import(qw/CurrentFile CurrentTreeNumber/); }
+
+# We have two kinds of global state. Related to the file being edited...
+my ($statistics, $stat_file);
+
+# ... and related to the tree being edited.
+my ($current_tree, $start_time);
+
+# Also, a debug flag.
+my $debug = 1;
+
+sub exit_hook {
+    # Save statistics for last tree edited (if we've opened a file).
+    save_statistics() if $statistics;
+}
+
+sub file_opened_hook {
+    # Per-file initialisation/cleanup goes here.
+    my $filename = CurrentFile()->filename;
+    $filename =~ s/\w+\z/timings/msx;
+    trace("file_opened_hook: Saving to $filename.");
+
+    #save_statistics($current_tree, time()-$start_time) if defined $statistics;
+    save_statistics() if defined $statistics;
+
+    $stat_file = $filename;
+    if(-e $stat_file) {
+        trace("file_opened_hook: Found stat file, loading it.");
+        $statistics = retrieve($stat_file)
+    }
+    else {
+        trace("file_opened_hook: No stat file found, starting from scratch.");
+        $statistics = [];
+    }
+}
+
+sub after_redraw_hook {
+    my $new_tree = CurrentTreeNumber();
+    my $now = time;
+    trace("after_redraw_hook");
+
+    return if defined $current_tree and $current_tree == $new_tree;
+
+    #save_statistics($current_tree, $now-$start_time) if defined $current_tree;
+    save_statistics() if defined $current_tree;
+    $current_tree = $new_tree;
+    $start_time   = $now;
+}
+
+sub save_statistics {
+    #my ($id, $time) = @_;
+    my $time = time()-$start_time;
+    trace("save_statistics");
+
+    $statistics->[$current_tree] += $time;
+    trace("Edited tree #$current_tree for $time seconds ($statistics->[$current_tree] total).");
+    nstore($statistics, $stat_file);
+}
+
+sub trace {
+    return if not $debug;
+    say STDERR @_
+}
+
+1;
+
+# vim:ft=perl

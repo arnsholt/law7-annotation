@@ -11,11 +11,12 @@ MALT?=malt
 
 all:
 
-# The numbers in these two rules split the corpus into 90% training and 10%
-# test.
+# Corpora munging:
+## The first 90% of the corpus take up 97470 lines.
 corpora/norwegian.conll: corpora/norwegian-full.conll
 	head -n 97470 $< > $@
 
+## Thus, the last 10% start on line 97471.
 corpora/norwegian-test.conll: corpora/norwegian-full.conll
 	tail -n +97471 $< > $@
 

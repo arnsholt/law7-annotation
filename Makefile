@@ -9,7 +9,7 @@ MALT?=malt
 # even if we instruct make to create the parsed file.
 .SECONDARY:
 
-all:
+all: medians-odin.dat medians-thor.dat
 
 # Corpora munging:
 ## The first 90% of the corpus take up 97470 lines.

@@ -39,6 +39,29 @@ parsed/%-swedish.conll: corpora/%.conll models/swedish.mco | parsed
 parsed/%-caterpillar.conll: scripts/make-caterpillar.awk corpora/%.conll | parsed
 	awk -f $< corpora/$*.conll > $@
 
+eval/caterpillar.conll: scripts/make-caterpillar.awk corpora/norwegian-test.conll | eval
+	awk -f $< corpora/norwegian-test.conll > $@
+
+eval/%.conll: corpora/norwegian-test.conll models/%.mco | eval
+	./scripts/single-root.pl <(cd models && $(MALT) -m parse -c $* -i ../$<) | awk -f scripts/no-nobj.awk > $@
+
+# Data synthesis:
+%.dat: %-preproc.conll data/%.conll
+	paste $^ | awk '/^#/ { print gensub(/^.+(caterpillar|danish|norwegian|swedish).+$$/, "\\1", "", $$2), $$4, $$5}' > $@
+
+dagbladet_013-odin.dat: data/dagbladet_013-odin.conll dagbladet_013-preproc.conll
+	paste $^ | head -n 6180 | \
+		awk '/^#/ { print gensub(/^.+(caterpillar|danish|norwegian|swedish).+$$/, "\\1", "", $$5), $$2, $$3}' > $@
+
+odin.dat: aftenposten_006.dat dagbladet_012.dat dagbladet_013-odin.dat
+	cat $^ | sort -k 1 | awk 'prev != $$1 { if(prev) print "\n"; prev = $$1 } {print}' > $@
+
+thor.dat: aftenposten_008.dat dagbladet_013.dat
+	cat $^ | sort -k 1 | awk 'prev != $$1 { if(prev) print "\n"; prev = $$1 } {print}' > $@
+
+medians-odin.dat medians-thor.dat: scripts/medians.r scripts/timingdata.r odin.dat thor.dat
+	R --slave -f $<
+
 # Utility stuff:
 $(DIRS):
 	mkdir $@

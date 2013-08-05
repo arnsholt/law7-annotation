@@ -1,1 +1,16 @@
-Instructions go here.
+As with any researcher software, this has not been tested on a wide variety of
+platforms. It's known to work on Ubuntu 12.04 (Precise) and RHEL 6. If you
+have trouble getting things to run, contact me at arnsholt@gmail.com.
+
+Software you'll need:
+- GNU Make
+- bash
+- GNU AWK
+- R
+- Perl 5.12 or greater
+    - Lingua::CoNLLX, available from https://github.com/arnsholt/Lingua-CoNLLX
+
+If you want to train parsers, you'll also need MaltParser. The Makefile
+assumes that MaltParser is run with a script called "malt". If you don't have
+such a script, run this instead:
+    MALT="java -jar /path/to/maltparser.jar" make models/norwegian.mco
